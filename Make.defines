@@ -1,0 +1,49 @@
+#Select your environment
+
+
+UNAME := $(shell uname)
+
+
+#Set compiler options and LIBS and LINKFLAGS specific to the platform
+ifeq ($(UNAME), Linux)
+  OPTIONS = -DLINUX
+  LIBS =
+  LINKFLAGS = -lrt
+else
+  ifeq ($(UNAME), Darwin)
+    OPTIONS = -DDARWIN
+    LIBS =
+    LINKFLAGS =
+    IFLAGS =
+  else
+    ifeq ($(UNAME), FreeBSD)
+      OPTIONS = -DBSD
+      LIBS =
+      LINKFLAGS =
+      IFLAGS =
+    else
+      OPTIONS = -DBSD
+      LIBS =
+      LINKFLAGS =
+      IFLAGS =
+      $(error ERROR BAD uname)
+    endif
+  endif
+endif
+
+
+BASELIBS = -lm
+LDFLAGS     =
+LINKOPTIONS = -o
+
+CXX = g++
+CPLUS = g++
+CC = gcc
+C = gcc
+
+
+#CFLAGS = -c -ggdb -O2 -m32  -Wall $(OSFLAG) $(IFLAGS)
+CFLAGS = -c -ggdb -O2  -Wall $(OPTIONS) $(IFLAGS)
+CPLUSFLAGS = -c -ggdb -O2 -Wall $(OPTIONS) $(IFLAGS)
+
+

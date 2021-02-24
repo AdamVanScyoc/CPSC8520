@@ -242,6 +242,7 @@ int main(int argc, char *argv[])
 
 
       /* Send received datagram back to the client */
+/*
       rc = sendto(sock, echoBuffer, recvMsgSize, 0,  (struct sockaddr *) &echoClntAddr, sizeof(echoClntAddr));
 
       if ( rc != recvMsgSize) 
@@ -251,6 +252,7 @@ int main(int argc, char *argv[])
               curTime,loopCount,recvMsgSize, inet_ntoa(echoClntAddr.sin_addr), errorCount, rc,  errno);
           continue;
       }
+*/
 
       //Tries to be consistent with the client samples
       if (createDataFileFlag == 1 ) {
@@ -284,14 +286,14 @@ void CNTCCode() {
 
 
 void exitProcessing(double curTime) {
-  unsigned int numberLost=0;
-  double avgLoss = 0.0;
+  //unsigned int numberLost=0;
+  //double avgLoss = 0.0;
   double throughput=0.0;
-  double  duration = 0.0;
+  //double  duration = 0.0;
   double  duration1 = 0.0;
 
   endTime = curTime;
-  duration = endTime - startTime;
+  //duration = endTime - startTime;
   duration1 = timeOfMostRecentArrival - timeOfFirstArrival;
 
   if (sock != -1) 
@@ -302,17 +304,18 @@ void exitProcessing(double curTime) {
 
   if (duration1 >  0)
     throughput =  (totalByteCount * 8.0) / duration1;
-
+/*
   if ((numberLost > 0) && (largestSeqRecv > 0)) 
     avgLoss = ((double)numberLost*100)/largestSeqRecv;
+*/
 
   if (numberLATENCYSamples > 0) {
      meanCurLATENCY =  sumOfCurLATENCY / numberLATENCYSamples;
   }
 
   if (debugLevel >0) {
-    printf("UDPEchoServer(%s:%f:%f)  avgLoss:%2.5f, meanLATENCY:%3.6f, throughput:%9.0f  totalByteCount:%9.0f  numberLost:%d \n",
-       getVersion(), curTime,duration,  avgLoss, meanCurLATENCY, throughput, totalByteCount, numberLost);
+    printf("\nExpTrafficGenServer:    %9.0f\n",
+       throughput);
   } 
   if (newFile != NULL) {
     fflush(newFile);
