@@ -314,7 +314,7 @@ void exitProcessing(double curTime) {
   }
 
   if (debugLevel >0) {
-    printf("\nExpTrafficGenServer:    %9.0f\n",
+    printf("\nExpTrafficGenServer:    %f\n",
        throughput);
   } 
   if (newFile != NULL) {
