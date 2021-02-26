@@ -240,20 +240,6 @@ int main(int argc, char *argv[])
       *intSendBufPtr++ =  (unsigned int)htonl(theTime2->tv_sec);
       *intSendBufPtr++ =  (unsigned int)htonl(theTime2->tv_usec);
 
-
-      /* Send received datagram back to the client */
-/*
-      rc = sendto(sock, echoBuffer, recvMsgSize, 0,  (struct sockaddr *) &echoClntAddr, sizeof(echoClntAddr));
-
-      if ( rc != recvMsgSize) 
-      {
-          errorCount++;
-          printf("UDPEchoServer(%f):(%d) HARD ERROR : error sending %d bytes to client %s, errorCount%d, rc:%d  errno:%d \n", 
-              curTime,loopCount,recvMsgSize, inet_ntoa(echoClntAddr.sin_addr), errorCount, rc,  errno);
-          continue;
-      }
-*/
-
       //Tries to be consistent with the client samples
       if (createDataFileFlag == 1 ) {
         fprintf(newFile,"%f %3.6f %3.6f %d %d %d \n",
@@ -286,14 +272,10 @@ void CNTCCode() {
 
 
 void exitProcessing(double curTime) {
-  //unsigned int numberLost=0;
-  //double avgLoss = 0.0;
   double throughput=0.0;
-  //double  duration = 0.0;
   double  duration1 = 0.0;
 
   endTime = curTime;
-  //duration = endTime - startTime;
   duration1 = timeOfMostRecentArrival - timeOfFirstArrival;
 
   if (sock != -1) 
@@ -304,10 +286,6 @@ void exitProcessing(double curTime) {
 
   if (duration1 >  0)
     throughput =  (totalByteCount * 8.0) / duration1;
-/*
-  if ((numberLost > 0) && (largestSeqRecv > 0)) 
-    avgLoss = ((double)numberLost*100)/largestSeqRecv;
-*/
 
   if (numberLATENCYSamples > 0) {
      meanCurLATENCY =  sumOfCurLATENCY / numberLATENCYSamples;
@@ -322,10 +300,4 @@ void exitProcessing(double curTime) {
     fflush(newFile);
     fclose(newFile);
   }
-//  exit(0);
 }
-
-
-
-
-

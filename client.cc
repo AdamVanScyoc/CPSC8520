@@ -164,36 +164,24 @@ void myUsage()
 int main(int argc, char *argv[])
 {
   struct sockaddr_in serverAddress; /* Echo server address */
-  //struct sockaddr_in clientAddress; /* Source address of echo */ 
-  //unsigned int clientAddressSize = 0;   /* In-out of address size for recvfrom() */
   unsigned short serverPort;        /* Echo server port */
 
   char *echoString;                /* String to send to echo server */
   char echoBuffer[ECHOMAX+1];      /* Buffer for receiving echoed string */
   int echoStringLen;               /* Length of string to echo */
-  //int respStringLen;               /* Length of received response */
   struct hostent *thehost;	     /* Hostent from gethostbyname() */
 
 
   char traceFile[MAX_TMP_BUFFER];
   char stringA[] = "?";
   double curTime = 0.0;
-  //double curTime3 = 0.0;
 
   struct timeval *theTime1;
-  //struct timeval *theTime2;
-  //struct timeval *theTime3;
   struct timeval TV1; //, TV2, TV3;
   struct sigaction myaction;
-  //long usec1, usec2; //, curPing;
   int *intSendBufPtr;
-  //int *intRxBufPtr;
   unsigned int seqNumber = 1;
-  //unsigned int RxSeqNumber = 1;
   struct timespec reqDelay;
-  //unsigned int numberResponses = 0;
-  //unsigned int totalReceivedMsgs = 0;
-
 
   int rc  = SUCCESS;
   int loopFlag = 1;
@@ -216,9 +204,6 @@ int main(int argc, char *argv[])
   myDelayRNG.setRange(10000, 1000000);
 
     theTime1 = &TV1;  //When we send
-
-    //theTime2 = &TV2;  //When we get the ACK
-    //theTime3 = &TV3;  //The time in the ACK
 
     //Initialize values
     numberOfTimeOuts = 0;
@@ -309,13 +294,8 @@ int main(int argc, char *argv[])
 	srand(time(0));
 
 	// Calculate delay in microseconds froma verage send rate.
-	//delay = averageSendRate / avgMessageSize*8 + 1000000;
-	//delay = averageSendRate/(avgMessageSize*8*1000000);
 	delay = (avgMessageSize*8*1000000)/averageSendRate;
-	//delay = myDelayRNG.getVariate_d();
     iterationDelay = ((double)delay)/1000000;/* Iteration delay in seconds */
-	//iterationDelay = myDelayRNG.getVariate_d() + 1000.0;
-	//iterationDelay = 0.5;
 
     if (debugLevel > 1) {
       printf("UDPEchoClient(%s): IP:port:%s:%d #params:%d delay %lld iterationDelay %f avgMessageSize %d nIterations %d createDataFileFlag%d  \n", 
@@ -338,8 +318,6 @@ int main(int argc, char *argv[])
     }
 
     /* Set up the echo string */
-
-    //messageSize = avgMessageSize + (rand() % (int)avgMessageSize*0.25)*(-1 * ((rand() % 2) + 1));
     messageSize = avgMessageSize + (myMsgRNG.getVariate_i());
 	messageSize = messageSize + -1*(messageSize & 0x1);
 	echoStringLen = messageSize;
@@ -351,8 +329,6 @@ int main(int argc, char *argv[])
     echoString[messageSize-1]='\0';
 
     intSendBufPtr = (int *)echoBuffer;
-    //intRxBufPtr = (int *)echoBuffer;
-
 
     /* Construct the server address structure */
     memset(&serverAddress, 0, sizeof(serverAddress));    /* Zero out structure */
@@ -444,11 +420,7 @@ int main(int argc, char *argv[])
         printf("UDPEchoClient: iteration:%d, sending seq:%d \n", numberOfTrials, (seqNumber - 1));
       }
 
-
-
-	  // Ensure delay is an exponentiatl random variable.
-	  //delay = myDelayRNG.getVariate_d();
-
+	  // Use the delay previously calculated as a function of desired throughput.
       iterationDelay = ((double)delay)/1000000;/* Iteration delay in seconds */
       reqDelay.tv_sec = (uint32_t)floor(iterationDelay);
 
@@ -462,7 +434,6 @@ int main(int argc, char *argv[])
         printf("UDPEchoClient2:iteratonDelay:%f nanosleep for %ld.%09ld \n", 
               iterationDelay, reqDelay.tv_sec, reqDelay.tv_nsec);
       }
-
 
       //Delay the correct amount of time
       timeStart=timestamp(); 
@@ -479,10 +450,11 @@ int main(int argc, char *argv[])
         printf("UDPEchoClient2: actualSleep:%f, sleepRemainder:%f \n",actualSleep, sleepRemainder);
       }
 
-    //messageSize = avgMessageSize + (rand() % (int)avgMessageSize*0.25)*(-1 * ((rand() % 2) + 1));
-    messageSize = avgMessageSize + (myMsgRNG.getVariate_i() * (int)pow(-1.0, (double)(rand() % 2) + 1));
-	messageSize = messageSize + -1*(messageSize & 0x1);
-	echoStringLen = messageSize;
+	  // Ensure that the message size is an exponential random variable
+	  // with a mean size of avgMessageSize.
+      messageSize = avgMessageSize + (myMsgRNG.getVariate_i() * (int)pow(-1.0, (double)(rand() % 2) + 1));
+	  messageSize = messageSize + -1*(messageSize & 0x1);
+	  echoStringLen = messageSize;
 	  echoStringLen = messageSize;
 
       echoString = (char *) echoBuffer;
@@ -491,14 +463,11 @@ int main(int argc, char *argv[])
       }
       echoString[messageSize-1]='\0';
 
-      //intSendBufPtr = (int *)echoBuffer;
-
-     /* Send the message to the server */
+	  /* Send the message to the server */
       if (debugLevel > 3) {
         printf("UDPEchoClient: Sending seqNum:%d (%d bytes) to the server: %s, next seq#timed:%d \n", 
              seqNumber - 1, echoStringLen,serverIP, outOfOrderArrivals);
       }
-
 	  rc =sendto(sock, echoString, echoStringLen, 0, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
 	  if (rc < 0) 
 	  {
@@ -515,139 +484,6 @@ int main(int argc, char *argv[])
 		}
 
 		bytesSent += echoStringLen;
-
-		/*
-		clientAddressSize = sizeof(clientAddress);
-		alarm(2);            //set the timeout for 2 seconds
-
-		//Time1: When we send the msg
-		//    Time2-Time1 = RTT
-		//Time2: when an ACK arrives
-		//Time3:  Time contained in the ACK
-		//       Time3 - curTime  - oneway time sender to client
-		// Recv a response 
-		respStringLen = recvfrom(sock, echoBuffer, ECHOMAX, 0, (struct sockaddr *) &clientAddress, &clientAddressSize);
-		alarm(0);            //clear the timeout 
-		gettimeofday(theTime2, NULL);
-		curTime = convertTimeval(theTime2);
-		numberResponses++;
-		if (respStringLen < 0) 
-		{
-		  //If an error occurs,  we basically ignore it-  the next iteration
-		  //we send the next sequence number -  we do not retransmit the sequence number that was dropped.
-		  // EINTR means the recvfrom was prematurely unblocked because the alarm popped
-		  if (errno == EINTR) 
-		  { 
-			//numberOfTimeOuts++; 
-			printf("UDPEchoClient:(%f) WARNING :Received Timeout !! #TOs:%d errorCount:%d  \n",
-				   curTime,numberOfTimeOuts,errorCount);
-			continue; 
-		  } else {
-			//else some other error....
-			errorCount++;
-			printf("UDPEchoClient:(%f) WARNING : Rx error errorCount:%d, errno:%d  \n",
-				   curTime,errorCount,errno);
-			continue; 
-		  }
-		} 
-		else 
-		{
-		  if (respStringLen != echoStringLen) 
-		  {
-			errorCount++;
-			printf("UDPEchoClient:(%f) WARNING : Rx'ed (%d) less than expected %d)  errorCount:%d  \n",
-				   curTime,respStringLen, echoStringLen,errorCount);
-			continue; 
-		  }
-		} 
-
-
-		//If we get here, either no error or we aren't worried about an error....move forward:
-		//And...theTime2 and curTime is updated
-		if (debugLevel > 3) {
-		  printf("UDPEchoClient:(%f): Received %d bytes from  %s \n", curTime, respStringLen, serverIP);
-		}
-
-		intRxBufPtr = (int *)echoBuffer;
-		RxSeqNumber = (unsigned int)ntohl( (unsigned int)(*intRxBufPtr++));
-		theTime3->tv_sec = (unsigned int)ntohl( (unsigned int)(*intRxBufPtr++));
-		theTime3->tv_usec = (unsigned int)ntohl( (unsigned int)(*intRxBufPtr++));
-		curTime3 = convertTimeval(theTime3);
-		curLATENCY = curTime - curTime3;
-		smoothedLATENCY  = 0.5 * smoothedLATENCY + 0.5*curLATENCY;
-		sumOfCurLATENCY += curLATENCY;
-		numberLATENCYSamples++;
-
-		//update the largest rx seq number we have ever seen
-		if (RxSeqNumber > largestSeqRecv) {
-		  largestSeqRecv = RxSeqNumber;
-		}  
-		totalReceivedMsgs++;
-
-
-		if (debugLevel > 3) {
-		  printf("UDPEchoClient: Received seqNumber: %d , and outOfOrderArrivals:%d, errorCount:%d \n",
-			  RxSeqNumber,outOfOrderArrivals,errorCount);
-		}
-
-		//At this point we have the RxSeqNumber of the reply message that just arrived.
-		//Three possibilities for what arrives based on what was sent (saved in largestSeqSent)
-		//   1  Rx SeqNumber is less largestSeqSent -  means that an out of order message arrived
-		//   2  Rx SeqNumber is greater than  largestSeqSent -  should never happen
-		//   3  Rx SeqNumber  equals largestSeqSent - this is the case if no errors have occurred
-		//   If the client ever sends a window of messages before any replies arrive then
-		//     there are more possibilities.
-
-
-		if (RxSeqNumber > largestSeqSent) {
-			printf("UDPEchoClient2:(%f): HARD ERROR:  RxSeqNumber:%d largestSeqSent:%d  \n",
-			  curTime,  RxSeqNumber, largestSeqSent);
-			exit(1);
-		}
-
-		if (RxSeqNumber< largestSeqSent) {
-		  outOfOrderArrivals++;
-		  if (debugLevel >1 ) {
-			printf("UDPEchoClient2:(%f): WARNING OutOfOrder(gap%d) RxSeqNumber:%d largestSeqSent:%d , #outOfOrder:%d  \n",
-			  curTime, largestSeqSent -  RxSeqNumber, RxSeqNumber,largestSeqSent, outOfOrderArrivals);
-		  }
-		} 
-
-		//Note that if a timeout occurs, we would not get here for the iteration that failed
-
-		//Warning: the following are longs and not doubles....
-		usec2 = (theTime2->tv_sec) * 1000000 + (theTime2->tv_usec);
-		usec1 = (theTime1->tv_sec) * 1000000 + (theTime1->tv_usec);
-		curPing = (usec2 - usec1);
-		totalPing += curPing;
-
-		numberRTTSamples++;
-
-		curRTT = ((double)curPing) / 1000000;
-		smoothedRTT  = 0.5 * smoothedRTT + 0.5*curRTT;
-		sumOfCurRTT += curRTT;
-		numberLost = numberOfTrials - numberRTTSamples;
-
-		if (debugLevel > 3) {
-		  printf("UDPEchoClient2(%f): curRTT:%f, smoothRTT:%f currPing:%ld actualSleep:%f RxSeqNumber:%d #TOs:%d #Lost:%d, #Errors:%d \n",
-			   curTime,curRTT, smoothedRTT, curPing, actualSleep, RxSeqNumber, numberOfTimeOuts,numberLost, errorCount);
-		}
-
-		if (createDataFileFlag == 1 ) {
-		  fprintf(newFile,"%f %3.6f %3.6f %d %d %d \n", 
-			   curTime,curRTT, smoothedRTT, RxSeqNumber,respStringLen,  numberLost );
-		}
-		//show more information
-		if (createDataFileFlag == 2 ) {
-		  fprintf(newFile,"%f %3.6f  %3.6f %3.6f %3.6f  %d %d %d %d %d\n",
-			   curTime, curRTT, smoothedRTT, curLATENCY, smoothedLATENCY, 
-			   RxSeqNumber, respStringLen,numberLost, numberOfTimeOuts, errorCount);
-		}
-		if (debugLevel > 0) {
-		  printf("%f %3.6f %3.6f %d %d %d \n", 
-			   curTime,curRTT, smoothedRTT, RxSeqNumber,respStringLen,  numberLost );
-		}
-*/
 	  }
 
     }
@@ -695,25 +531,10 @@ void exitProcessing(double curTime)
   if (largestSeqSent > 0) 
     avgLoss = (((double)numberLost*100)/largestSeqSent);
 
+  // Calculate the throughput, which is the bits sent/duration in seconds.
   // ExpTrafficGenClient:  averageSendRate averageMsgSize  numberOfIterations
-  // TODO 
   printf("\nExpTrafficGenClient:  bytesSent: %lld throughput: %f avgMessageSize: %d numberIterations: %d duration: %f\n", bytesSent, (bytesSent*8)/duration, avgMessageSize, nIterations, duration);
-  //printf("\nExpTrafficGenClient:  throughput: %f avgMessageSize: %d numberIterations: %d numberIterations*iterationDelay: %f\n", (numberOfTrials*avgMessageSize*8)/(numberOfTrials*iterationDelay), avgMessageSize, nIterations, numberOfTrials*iterationDelay);
 
-  if (debugLevel > 0) {
-    //printf("\nUDPEchoClient[%s:%f:%f:%s]:  \n\tmeanRTT:%3.6f smoothedRTT:%3.6f, meanLatency:%3.6f,avgLoss:%2.5f numberTrials:%d, numberLost:%d\n",
-
-  }
-  if (debugLevel > 1) {
-    printf("UDPEchoClient[%s:%f:%f:%s]:  \n\tmeanRTT:%3.6f smoothedRTT:%3.6f, meanLatency:%3.6f, avgLoss:%2.5f numberTrials:%d, numberLost:%d\n",
-               getVersion(), curTime,duration,serverIP, meanCurRTT, smoothedRTT, meanCurLATENCY,
-               avgLoss, numberOfTrials, numberLost);
-
-	/*
-    printf("\n\t samples/#Lost/#TOs/OutofOrders/#Sockets: :%d:%d:%d:%d:%d #errors:%d\n", 
-              numberRTTSamples,numberLost, numberOfTimeOuts, outOfOrderArrivals,numberOfSocketsUsed,errorCount);
-			  */
-  }
   if (newFile != NULL) {
     fflush(newFile);
     fclose(newFile);
