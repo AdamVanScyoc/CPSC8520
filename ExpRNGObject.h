@@ -17,9 +17,13 @@ class ExpRNGObject : public RNGObject {
 
 			do {
 				Xi = (rand() / (RAND_MAX + 1.0));
-				ret = -log(1 - Xi) / lam;
+				ret = -log(1 - Xi) / lam + this->min;
 			} while(ret < this->min || ret > this->max);
 
 			return ret;
+		};
+
+		int getVariate_i() {
+			return round(getVariate_d());
 		};
 };

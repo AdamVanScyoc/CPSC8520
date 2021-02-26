@@ -314,6 +314,7 @@ void exitProcessing(double curTime) {
   }
 
   if (debugLevel >0) {
+    printf("\nduration:    %f\n", duration1);
     printf("\nExpTrafficGenServer:    %f\n",
        throughput);
   } 
