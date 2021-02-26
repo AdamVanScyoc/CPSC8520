@@ -453,8 +453,7 @@ int main(int argc, char *argv[])
 	  // Ensure that the message size is an exponential random variable
 	  // with a mean size of avgMessageSize.
       messageSize = avgMessageSize + (myMsgRNG.getVariate_i() * (int)pow(-1.0, (double)(rand() % 2) + 1));
-	  messageSize = messageSize + -1*(messageSize & 0x1);
-	  echoStringLen = messageSize;
+	  if (messageSize < 1) messageSize = 1;
 	  echoStringLen = messageSize;
 
       echoString = (char *) echoBuffer;
