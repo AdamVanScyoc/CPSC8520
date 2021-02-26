@@ -221,8 +221,8 @@ ssize_t readline(int fd, void *vptr, size_t maxlen)
 int n, rc;
 char c, *ptr;
 
-ptr = vptr;
-  for (n = 1; n < maxlen; n++) {
+ptr = (char *)vptr;
+  for (n = 1; n < (int)maxlen; n++) {
     if ( (rc = my_read(fd, &c)) == 1) 
     {
       *ptr++ = c;

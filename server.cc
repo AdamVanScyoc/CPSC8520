@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    signal (SIGINT, CNTCCode);
+    signal (SIGINT, (__sighandler_t)CNTCCode);
 
     echoServPort = atoi(argv[1]);  /* First arg:  local port */
     printf("UDPEchoServer: Entered with %d args, port:%d \n", 

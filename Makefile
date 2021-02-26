@@ -1,5 +1,7 @@
 include Make.defines
 
+CC = g++
+
 PROGS =	 client server
 
 COBJECTS =	utils.o  

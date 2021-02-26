@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
       exit(1);
     }
 
-    signal (SIGINT, clientCNTCCode);
+    signal (SIGINT, (__sighandler_t)clientCNTCCode);
 
     serverIP = argv[1];           /* First arg: server IP address (dotted quad) */
 
@@ -334,7 +334,7 @@ int main(int argc, char *argv[])
     serverAddress.sin_addr.s_addr = (in_addr_t)inet_addr(serverIP);  /* Server IP address */
     
     /* If user gave a dotted decimal address, we need to resolve it  */
-    if (serverAddress.sin_addr.s_addr == -1) {
+    if (serverAddress.sin_addr.s_addr == (unsigned int)-1) {
         thehost = gethostbyname(serverIP);
 	    serverAddress.sin_addr.s_addr = *((unsigned long *) thehost->h_addr_list[0]);
     }
