@@ -130,10 +130,10 @@ long long bytesSent = 0;
 void myUsage()
 {
 
-  fprintf(stderr, "UDPEchoClient(%s): usage: <Server IP> <Server Port> [<averageSendRate>] [<Average Message Size (bytes)>] [<# of iterations>] [<traceFile>]\n", getVersion());
-  fprintf(stderr, "   Example, to send 10 byte msgs 1000  iterations placing samples in a file \n");
-  fprintf(stderr, "        ./client localhost 5000 1000000 10 1000 RTT.dat \n");
-  fprintf(stderr, "   Example, to run forever:  ./client localhost 5000 1000000 1000 0 RTT.dat \n");
+  fprintf(stderr, "UDPEchoClient(%s): usage: <Server IP> <Server Port> [<averageSendRate>] [<Average Message Size (bytes)>] [<# of iterations>]\n", getVersion());
+  fprintf(stderr, "   Example, to send 10000 bps, 64-Byte avergage message size, 1000  iterations\n");
+  fprintf(stderr, "        ./client localhost 5000 10000 64 1000\n");
+  fprintf(stderr, "   Example, to run forever:  ./client localhost 5000 10000 64 0\n");
 }
 
 
@@ -306,6 +306,8 @@ int main(int argc, char *argv[])
       }
     }
 
+	srand(time(0));
+
 	// Calculate delay in microseconds froma verage send rate.
 	//delay = averageSendRate / avgMessageSize*8 + 1000000;
 	//delay = averageSendRate/(avgMessageSize*8*1000000);
@@ -337,7 +339,9 @@ int main(int argc, char *argv[])
 
     /* Set up the echo string */
 
-    messageSize = avgMessageSize + (rand() % (int)avgMessageSize*0.25)*(-1 * ((rand() % 2) + 1));
+    //messageSize = avgMessageSize + (rand() % (int)avgMessageSize*0.25)*(-1 * ((rand() % 2) + 1));
+    messageSize = avgMessageSize + (myMsgRNG.getVariate_i());
+	messageSize = messageSize + -1*(messageSize & 0x1);
 	echoStringLen = messageSize;
 
     echoString = (char *) echoBuffer;
@@ -475,7 +479,10 @@ int main(int argc, char *argv[])
         printf("UDPEchoClient2: actualSleep:%f, sleepRemainder:%f \n",actualSleep, sleepRemainder);
       }
 
-      messageSize = avgMessageSize + (rand() % (int)avgMessageSize*0.25)*(-1 * ((rand() % 2) + 1));
+    //messageSize = avgMessageSize + (rand() % (int)avgMessageSize*0.25)*(-1 * ((rand() % 2) + 1));
+    messageSize = avgMessageSize + (myMsgRNG.getVariate_i() * (int)pow(-1.0, (double)(rand() % 2) + 1));
+	messageSize = messageSize + -1*(messageSize & 0x1);
+	echoStringLen = messageSize;
 	  echoStringLen = messageSize;
 
       echoString = (char *) echoBuffer;
@@ -690,7 +697,7 @@ void exitProcessing(double curTime)
 
   // ExpTrafficGenClient:  averageSendRate averageMsgSize  numberOfIterations
   // TODO 
-  printf("\nExpTrafficGenClient:  bytesSent: %lld throughput: %f avgMessageSize: %d numberIterations: %d duration: %f\n", bytesSent, (numberOfTrials*bytesSent*8)/duration, avgMessageSize, nIterations, duration);
+  printf("\nExpTrafficGenClient:  bytesSent: %lld throughput: %f avgMessageSize: %d numberIterations: %d duration: %f\n", bytesSent, (bytesSent*8)/duration, avgMessageSize, nIterations, duration);
   //printf("\nExpTrafficGenClient:  throughput: %f avgMessageSize: %d numberIterations: %d numberIterations*iterationDelay: %f\n", (numberOfTrials*avgMessageSize*8)/(numberOfTrials*iterationDelay), avgMessageSize, nIterations, numberOfTrials*iterationDelay);
 
   if (debugLevel > 0) {

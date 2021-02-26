@@ -84,8 +84,8 @@ double totalByteCount=0;
 
 void myUsage()
 {
-  fprintf(stderr,"UDPEchoServer:(%s): usage: <UDP SERVER PORT> <trace File Name> \n", getVersion());
-  fprintf(stderr,"   Example:  ./server 5000 server.dat \n");
+  fprintf(stderr,"UDPEchoServer:(%s): usage: <UDP SERVER PORT>\n", getVersion());
+  fprintf(stderr,"   Example:  ./server 5000\n");
 }
 
 
